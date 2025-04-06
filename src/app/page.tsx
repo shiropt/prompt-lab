@@ -7,25 +7,21 @@ import { PromptOutput } from "@/components/prompt-output";
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
 import { useAuth } from "../../contexts/auth-context";
-import { useSavedPrompts } from "../../contexts/saved-prompts-context";
+import {
+  ParsedPromptData,
+  useSavedPrompts,
+} from "../../contexts/saved-prompts-context";
 
 export default function Home() {
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
   const { getPromptById, parsePromptContent } = useSavedPrompts();
-  const [selectedPromptData, setSelectedPromptData] = useState<any>(null);
+  const [selectedPromptData, setSelectedPromptData] =
+    useState<ParsedPromptData | null>(null);
   const [selectedPromptTitle, setSelectedPromptTitle] = useState<string | null>(
     null
   );
   const [selectedPromptId, setSelectedPromptId] = useState<string | null>(null);
-
-  // URLからプロンプトIDを取得して初期化
-  useEffect(() => {
-    const promptId = searchParams.get("promptId");
-    if (promptId) {
-      handleSelectPrompt(promptId);
-    }
-  }, [searchParams]);
 
   const handleSelectPrompt = useCallback(
     (promptId: string) => {
@@ -39,6 +35,13 @@ export default function Home() {
     },
     [getPromptById, parsePromptContent]
   );
+  // URLからプロンプトIDを取得して初期化
+  useEffect(() => {
+    const promptId = searchParams.get("promptId");
+    if (promptId) {
+      handleSelectPrompt(promptId);
+    }
+  }, [searchParams, handleSelectPrompt]);
 
   return (
     <div className="min-h-screen">

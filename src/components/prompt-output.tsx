@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,6 +32,28 @@ export function PromptOutput() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
+  const createPromptFromData = useCallback((data: FormData): string => {
+    let prompt = "";
+
+    if (data.role) prompt += `ロール: ${data.role}\n`;
+    if (data.goal) prompt += `目的: ${data.goal}\n`;
+    if (data.input) {
+      // HTMLからプレーンテキストを抽出
+      const inputText = stripHtml(data.input);
+      prompt += `入力: ${inputText}\n`;
+    }
+    if (data.context) {
+      // HTMLからプレーンテキストを抽出
+      const contextText = stripHtml(data.context);
+      prompt += `背景情報: ${contextText}\n`;
+    }
+    if (data.constraints) prompt += `制約: ${data.constraints}\n`;
+    if (data.tone) prompt += `トーン: ${data.tone}\n`;
+    if (data.format) prompt += `フォーマット: ${data.format}\n`;
+
+    return prompt;
+  }, []);
+
   useEffect(() => {
     const handleOptimize = (event: CustomEvent<FormData>) => {
       const data = event.detail;
@@ -62,34 +84,12 @@ export function PromptOutput() {
         handleOptimize as EventListener
       );
     };
-  }, []);
+  }, [createPromptFromData]);
 
   const stripHtml = (html: string) => {
     // HTMLタグを削除して純粋なテキストを取得
     const doc = new DOMParser().parseFromString(html, "text/html");
     return doc.body.textContent || "";
-  };
-
-  const createPromptFromData = (data: FormData): string => {
-    let prompt = "";
-
-    if (data.role) prompt += `ロール: ${data.role}\n`;
-    if (data.goal) prompt += `目的: ${data.goal}\n`;
-    if (data.input) {
-      // HTMLからプレーンテキストを抽出
-      const inputText = stripHtml(data.input);
-      prompt += `入力: ${inputText}\n`;
-    }
-    if (data.context) {
-      // HTMLからプレーンテキストを抽出
-      const contextText = stripHtml(data.context);
-      prompt += `背景情報: ${contextText}\n`;
-    }
-    if (data.constraints) prompt += `制約: ${data.constraints}\n`;
-    if (data.tone) prompt += `トーン: ${data.tone}\n`;
-    if (data.format) prompt += `フォーマット: ${data.format}\n`;
-
-    return prompt;
   };
 
   const enhancePrompt = (prompt: string): string => {
