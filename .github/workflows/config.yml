@@ -17,11 +17,12 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Cache node_modules
-        uses: actions/cache@v3
+      - name: Upload node_modules
+        uses: actions/upload-artifact@v3
         with:
+          name: node_modules
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          retention-days: 1
 
   lint:
     needs: setup
@@ -34,11 +35,11 @@ jobs:
         with:
           node-version: "lts/*"
 
-      - name: Restore node_modules
-        uses: actions/cache@v3
+      - name: Download node_modules
+        uses: actions/download-artifact@v3
         with:
+          name: node_modules
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       - name: Lint
         run: yarn lint
@@ -54,11 +55,11 @@ jobs:
         with:
           node-version: "lts/*"
 
-      - name: Restore node_modules
-        uses: actions/cache@v3
+      - name: Download node_modules
+        uses: actions/download-artifact@v3
         with:
+          name: node_modules
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       - name: Type check
         run: yarn type-check
@@ -74,11 +75,11 @@ jobs:
         with:
           node-version: "lts/*"
 
-      - name: Restore node_modules
-        uses: actions/cache@v3
+      - name: Download node_modules
+        uses: actions/download-artifact@v3
         with:
+          name: node_modules
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
 
       - name: Run tests
         run: yarn jest
