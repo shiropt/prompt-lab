@@ -1,0 +1,182 @@
+# Prompt Lab プロジェクトコーディング規約
+
+このドキュメントはPrompt Labプロジェクトにおけるコーディング規約を定義しています。すべての開発者はこれらのルールに従ってコードを作成・修正してください。
+
+## 一般的なルール
+
+
+
+### 命名規則
+- 変数・関数名: camelCase
+- コンポーネント名: PascalCase
+- 定数: UPPER_CASE_SNAKE_CASE
+- ファイル名: kebab-case.tsx (コンポーネントは例外的にPascalCase.tsxも可)
+- インターフェース名: 接頭辞にIを付けない (例: UserProps, not IUserProps)
+- 型名: PascalCase、接尾辞にTypeを付けない (例: UserData, not UserDataType)
+
+## React/Next.js特有のルール
+
+### コンポーネント
+- Functional Component (関数コンポーネント)のみを使用
+- アロー関数でコンポーネントを定義する
+- 適切なコンポーネント分割を心がける (1ファイル200行を超えないようにする)
+- propsには明示的な型定義を行う
+
+```tsx
+// 良い例
+type ButtonProps = {
+  variant?: 'primary' | 'secondary';
+  onClick: () => void;
+  children: React.ReactNode;
+};
+
+const Button = ({ variant = 'primary', onClick, children }: ButtonProps) => {
+  return (
+    <button 
+      className={variant === 'primary' ? 'bg-blue-500' : 'bg-gray-300'} 
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+### State管理
+- 状態管理には主にReactのuseStateとuseReducerを使用
+- グローバル状態は必要最小限にし、Context APIを活用
+- 複雑な状態ロジックはカスタムフックに抽出する
+
+### useEffect
+- **無駄なuseEffectを使用しない**
+  - イベントハンドラーで直接処理できるロジックはuseEffectに入れない
+  - コンポーネントのレンダリング中に計算できる値はuseEffectの外で計算
+  - Server ComponentsとApp Routerの機能を最大限活用し、useEffectの使用を最小限に
+
+```tsx
+// 悪い例
+const [fullName, setFullName] = useState('');
+
+useEffect(() => {
+  setFullName(`${firstName} ${lastName}`);
+}, [firstName, lastName]);
+
+// 良い例
+const fullName = `${firstName} ${lastName}`;
+```
+
+- 依存配列は必ず指定し、ESLintのルールに従う
+- クリーンアップ関数を適切に実装する
+
+### パフォーマンス最適化
+- 不必要な再レンダリングを避けるためのメモ化を適切に使用
+  - React.memo
+  - useMemo
+  - useCallback
+- 大きなリストには仮想化を検討 (react-window等)
+- 画像最適化にはNext.jsのImageコンポーネントを使用
+
+### Tailwind CSS
+- クラス名の並び順は一貫性を保つ（レイアウト→サイズ→スペーシング→カラー→その他）
+- 複雑なスタイルはclass-variance-authorityやtailwind-mergeを活用する
+- レスポンシブデザインには必ずTailwindのブレークポイント修飾子を使用
+- 共通スタイルはコンポーネント化するか、Tailwindの@applyディレクティブを使用
+
+```tsx
+// 良い例
+<div className="flex flex-col md:flex-row items-center gap-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+  {/* コンテンツ */}
+</div>
+```
+
+## Next.js App Router特有のルール
+
+### Server Components vs Client Components
+- デフォルトではServer Componentsを使用
+- インタラクティブ要素が必要な場合のみClient Componentsに'use client'ディレクティブを追加
+- データフェッチはできるだけServer Componentsで行う
+
+### ファイル構成
+- 適切なApp Router規約に従ったファイル構成を維持
+  - page.tsx: ルートコンポーネント
+  - layout.tsx: レイアウト
+  - loading.tsx: ローディング状態
+  - error.tsx: エラーハンドリング
+  - route.ts: APIルート
+
+### 型安全性
+- すべての変数、関数、コンポーネントに適切な型定義を行う
+- any型の使用は避ける
+- unknown型と型ガードパターンを活用する
+- 非nullアサーション演算子（!）の使用は最小限に
+
+```tsx
+// 悪い例
+const data: any = fetchData();
+const value = data.value;
+
+// 良い例
+interface DataType {
+  value: string;
+}
+
+const data = fetchData() as DataType;
+const value = data.value;
+```
+
+## テスト
+
+### Jest / React Testing Library
+- ビジネスロジックとUIコンポーネントの両方に適切なテストを書く
+- テスト記述にはReact Testing Libraryの推奨パターンに従う
+- スナップショットテストは慎重に使用する
+
+```tsx
+// 良い例
+test('ボタンをクリックするとonClickが呼ばれる', () => {
+  const handleClick = jest.fn();
+  render(<Button onClick={handleClick}>Click Me</Button>);
+  
+  fireEvent.click(screen.getByText(/click me/i));
+  
+  expect(handleClick).toHaveBeenCalledTimes(1);
+});
+```
+
+## アクセシビリティ
+
+- すべてのインタラクティブ要素には適切なaria属性とキーボードサポートを提供
+- 色のコントラスト比はWCAGガイドラインに準拠
+- 画像にはalt属性を適切に設定
+- フォームには適切なラベルとエラーメッセージを提供
+
+## セキュリティ
+
+- ユーザー入力のサニタイズを徹底
+- XSS攻撃を防ぐためのベストプラクティスに従う
+- API認証情報を直接コードに埋め込まない (.envファイルを使用)
+- CSRFトークンを適切に実装
+- 必要に応じてContent Security Policy (CSP)を設定
+
+## パフォーマンス
+
+- 大きな依存関係の追加は慎重に検討
+- コード分割と遅延ロードを活用
+- 画像最適化（サイズ、フォーマット）
+- ページの初期ロード時間とTTIを最小化する工夫
+- Lighthouseスコアを定期的に確認
+
+## バージョン管理 (Git)
+
+- 機能実装やバグ修正ごとに個別のブランチを作成
+- コミットメッセージは明確で説明的に
+- PRはレビュー前に自己レビューを行い、不要なコード、console.log、コメントアウトを削除
+- マージ前にコンフリクトを解決
+
+## その他の推奨事項
+
+- 環境変数の型安全な取り扱い
+- エラーハンドリングの一貫性
+- ログ出力の標準化
+- 国際化対応（i18n）の考慮
+- ダークモード対応の維持
