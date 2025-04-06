@@ -2,12 +2,14 @@
   "name": "prompt-lab",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "jest": "jest",
+    "test": "yarn lint && yarn jest && yarn type-check",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit"

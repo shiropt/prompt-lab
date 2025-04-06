@@ -79,7 +79,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setError(result.message);
         }
       }
-    } catch (err) {
+    } catch {
       setError("エラーが発生しました。もう一度お試しください。");
     } finally {
       setIsLoading(false);
