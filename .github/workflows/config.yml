@@ -3,7 +3,7 @@ name: CI
 on: push
 
 jobs:
-  setup:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,43 +17,16 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      - name: Upload node_modules
-        uses: actions/upload-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
-          retention-days: 1
-
-  lint:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
-
-      - name: Fix executable permissions
+      - name: Verify node_modules structure
         run: |
-          chmod -R +x node_modules/.bin 2>/dev/null || true
           ls -la node_modules/.bin || echo "No .bin directory found"
-          echo "PATH environment: $PATH"
-          # NPXを使用して実行する
-          npx --no-install next --version || echo "Unable to run next via npx"
+          echo "Checking for next binary:"
+          find node_modules -name "next" -type f -executable
 
       - name: Lint
-        run: npx --no-install next lint
+        run: yarn lint
 
   type-check:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,21 +35,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
+          cache: "yarn"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
-
-      - name: Fix executable permissions
-        run: chmod -R +x node_modules/.bin 2>/dev/null || true
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Type check
-        run: npx --no-install tsc --noEmit
+        run: yarn type-check
 
   test:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,15 +52,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "lts/*"
+          cache: "yarn"
 
-      - name: Download node_modules
-        uses: actions/download-artifact@v4
-        with:
-          name: node-modules
-          path: node_modules/
-
-      - name: Fix executable permissions
-        run: chmod -R +x node_modules/.bin 2>/dev/null || true
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       - name: Run tests
-        run: npx --no-install jest
+        run: yarn jest
