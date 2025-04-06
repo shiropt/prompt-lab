@@ -41,6 +41,9 @@ jobs:
           name: node_modules
           path: node_modules
 
+      - name: Fix permissions
+        run: chmod -R +x node_modules/.bin
+
       - name: Lint
         run: yarn lint
 
@@ -61,6 +64,9 @@ jobs:
           name: node_modules
           path: node_modules
 
+      - name: Fix permissions
+        run: chmod -R +x node_modules/.bin
+
       - name: Type check
         run: yarn type-check
 
@@ -80,6 +86,9 @@ jobs:
         with:
           name: node_modules
           path: node_modules
+
+      - name: Fix permissions
+        run: chmod -R +x node_modules/.bin
 
       - name: Run tests
         run: yarn jest
