@@ -30,14 +30,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
       - name: Download node_modules
         uses: actions/download-artifact@v4
         with:
           name: node-modules
           path: node_modules/
 
+      - name: Fix executable permissions
+        run: |
+          chmod -R +x node_modules/.bin 2>/dev/null || true
+          ls -la node_modules/.bin || echo "No .bin directory found"
+          echo "PATH environment: $PATH"
+          # NPXを使用して実行する
+          npx --no-install next --version || echo "Unable to run next via npx"
+
       - name: Lint
-        run: yarn lint
+        run: npx --no-install next lint
 
   type-check:
     needs: setup
@@ -45,14 +58,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
       - name: Download node_modules
         uses: actions/download-artifact@v4
         with:
           name: node-modules
           path: node_modules/
 
+      - name: Fix executable permissions
+        run: chmod -R +x node_modules/.bin 2>/dev/null || true
+
       - name: Type check
-        run: yarn type-check
+        run: npx --no-install tsc --noEmit
 
   test:
     needs: setup
@@ -60,11 +81,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+
       - name: Download node_modules
         uses: actions/download-artifact@v4
         with:
           name: node-modules
           path: node_modules/
 
+      - name: Fix executable permissions
+        run: chmod -R +x node_modules/.bin 2>/dev/null || true
+
       - name: Run tests
-        run: yarn jest
+        run: npx --no-install jest
